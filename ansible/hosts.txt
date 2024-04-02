@@ -1,0 +1,12 @@
+[ubuntu]
+ubuntu_server ansible_host=16.170.252.228 ansible_user=ubuntu
+
+[aws]
+aws_server ansible_host=16.171.240.121 ansible_user=ec2-user ansible_python_interpreter=/usr/bin/python3.9
+
+[all_servers:children]
+ubuntu
+aws
+
+
+

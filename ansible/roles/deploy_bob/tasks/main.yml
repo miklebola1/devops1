@@ -1,0 +1,82 @@
+---
+# tasks file for deploy_bob
+    - name: Обновление всех пакетов (Ubuntu)
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: yes
+      notify: Перезагрузка системы
+      when: ansible_facts['os_family'] == "Debian"
+    
+    - name: Обновление всех пакетов (Amazon Linux)
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+      notify: Перезагрузка системы
+      when: ansible_facts['os_family'] == "RedHat"
+    
+    - name: Установка пакетов (Ubuntu)
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: latest
+      vars:
+        packages:
+        - wget   
+        - htop
+        - nginx
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Установка пакетов (Amazon Linux)
+      ansible.builtin.yum:
+        name: "{{ packages }}"
+        state: latest 
+      vars:
+        packages: 
+        - wget
+        - htop
+        - nginx
+      when: ansible_facts['os_family'] == "RedHat"
+      
+    - name: Запуск и включение nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started 
+        enabled: yes
+
+    - name: Создание группы students
+      ansible.builtin.group:
+        name: students
+        state: present
+        
+    - name: Создание пользователя bob и добавление его в группу students
+      ansible.builtin.user:
+        name: bob
+        group: students
+        createhome: yes
+
+    - name: Создание папки /opt/bob
+      ansible.builtin.file:   
+        path: /opt/bob
+        state: directory
+        owner: bob
+        group: students
+        mode: '0770'
+        
+    - name: Создание папки /opt/students
+      ansible.builtin.file:
+        path: /opt/students
+        state: directory
+        owner: root
+        group: students
+        mode: '0770'
+
+    
+    - name: Настройка sudoers для пользователя bob
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^bob'
+        line: 'bob ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+        
+
+    

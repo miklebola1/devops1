@@ -1,0 +1,5 @@
+---
+# handlers file for deploy_bob
+- name: Перезагрузка системы
+  ansible.builtin.reboot:
+    msg: "Перезапуск системы после обновления пакетов"
