@@ -78,5 +78,26 @@
         line: 'bob ALL=(ALL) NOPASSWD: ALL'
         validate: '/usr/sbin/visudo -cf %s'
         
+    - name: Создание файла .dont-touch.me рекурсивно (Ubuntu)
+      file_create:
+        path: '/home/ubuntu/ansible-test'
+      when: ansible_facts['os_family'] == "Debian"
 
     
+    - name: Создание файла .dont-touch.me рекурсивно (Amazon Linux)
+      file_create:
+        path: '/home/ec2-user/ansible-test'
+      when: ansible_facts['os_family'] == "RedHat"
+
+
+    - name: Users info
+      ansible.builtin.getent:
+        database: group
+      register: getent_groups
+    
+    - name: Отображение информации о группах
+      debug:
+        msg: "{{ item.key }}: {{ item.value[2] | default('Нет пользователей') }}"
+      loop: "{{ getent_groups.ansible_facts.getent_group | dict2items }}"
+      loop_control:
+        label: ''
