@@ -12,6 +12,6 @@ class CallbackModule(CallbackBase):
             self._display.banner("Список пользователей и их групп")
             groups_info = result._result['ansible_facts']['getent_group']
             for group, ginfo in groups_info.items():
-                users = ','.join(ginfo[3])  # ginfo[3] содержит список пользователей группы
+                users = ','.join(ginfo[3])
                 self._display.display(f"{group}: {users}")
 
