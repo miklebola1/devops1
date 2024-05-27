@@ -1,0 +1,7 @@
+php_packages:
+  - php
+  - php-fpm
+  - php-mysqlnd
+  - php-gd
+  - php-xml
+  - php-mbstring

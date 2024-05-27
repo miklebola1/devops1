@@ -1,0 +1,11 @@
+[Unit]
+Description=Create uptime files every minute
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/bin/bash /opt/scripts/uptime_script.sh 
+
+[Install]
+WantedBy=multi-user.target
+

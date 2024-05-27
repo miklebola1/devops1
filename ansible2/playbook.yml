@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    wordpress_path: /var/www/wordpress
+
+  roles:
+    - deploy_nginx
+    - configuration_php  
+    - deploy_wordpress_db
+    - deploy_wordpress
+    - backup
+    - certificate_configuration
+    - deploy_content
+    - deploy_uptime_service

@@ -1,0 +1,31 @@
+---
+# tasks file for configuration_php
+
+- name: Set variables (Ubuntu)
+  include_vars: Ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Set variables (RedHat)
+  include_vars: RedHat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Install PHP and extensions (Ubuntu)
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ php_packages }}"
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install PHP and extensions (Red Hat)
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ php_packages }}"
+  when: ansible_os_family == "RedHat"
+
+- name: PHP-FPM start
+  ansible.builtin.systemd:
+    name: php-fpm
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat"

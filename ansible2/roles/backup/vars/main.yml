@@ -1,0 +1,8 @@
+---
+# vars file for backup
+
+mysql_user: "root"
+mysql_password: "123321Qq."
+mysql_database: "wordpress"
+backup_dir: "/var/backups/mysql"
+

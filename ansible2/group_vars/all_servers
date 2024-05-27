@@ -1,0 +1,3 @@
+---
+private_key_file            : /Users/mihaillebedev/Downloads/Mikhail-key-Stockholm.pem
+ansible_python_interpreter  : /usr/bin/python3

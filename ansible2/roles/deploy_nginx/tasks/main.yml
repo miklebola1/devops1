@@ -1,0 +1,36 @@
+---
+# tasks file for deploy_nginx
+
+
+- name: Update all packages on Ubuntu
+  apt:
+    update_cache: yes
+    upgrade: dist
+  when: ansible_os_family == "Debian"
+
+- name: Update all packages on CentOs
+  dnf:
+    name: "*"
+    state: latest
+  when: ansible_os_family == "RedHat"
+
+- name: Install Nginx (CentOs)
+  dnf:
+    name: nginx
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Nginx (Debian)
+  apt:
+    name: nginx
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Starting and enabling Nginx
+  service:
+    name: nginx
+    state: started
+    enabled: true
+
+
+

@@ -1,0 +1,42 @@
+---
+# tasks file for backup
+
+- name: Install cron package
+  apt:
+    name: cron
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install cronie package
+  dnf:
+    name: cronie
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure crond is running and enabled
+  systemd:
+    name: crond
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat"
+
+- name: Create backup directory
+  file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: '0755'
+  when: ansible_os_family in ['RedHat', 'Debian']
+
+- name: Deploy backup script from template
+  template:
+    src: backup.sh
+    dest: /usr/local/bin/backup.sh
+    mode: '0755'
+  when: ansible_os_family in ['RedHat', 'Debian']
+
+- name: Add cron job for backup script
+  cron:
+    name: "MySQL Backup"
+    minute: "*/10"
+    job: "/usr/local/bin/backup.sh"
+  when: ansible_os_family in ['RedHat', 'Debian']

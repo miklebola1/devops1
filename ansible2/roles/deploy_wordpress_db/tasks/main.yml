@@ -1,0 +1,100 @@
+---
+# tasks file for deploy_wordpress_db
+
+- name: Installing MySQL and dependencies (Ubuntu)
+  package:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - mysql-server
+    - python3-pymysql 
+  become: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install MariaDB (RedHat)
+  yum:
+    name:
+      - mariadb-server
+      - python3-PyMySQL
+      - python3-pip
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Start and enable MySQL service (Ubuntu) 
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Start and enable MySQL service (RedHat)
+  service:
+    name: mariadb
+    state: started
+    enabled: yes 
+  become: yes
+  when: ansible_os_family == "RedHat"
+
+- name: Create MySQL configuration file for root user
+  become: true
+  become_user: root
+  copy:
+    content: |
+      [client]
+      user=root
+      password=pass
+    dest: /root/.my.cnf
+    mode: '0600'
+
+- name: Install pexpect
+  pip:
+    name: pexpect
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Expect
+  ansible.builtin.package:
+    name: expect
+    state: present
+
+
+- name: Create MySQL database (Ubuntu)
+  community.mysql.mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: wordpress
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Create MySQL user (Ubuntu)
+  community.mysql.mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: wordpressuser
+    password: pass
+    login_user: root
+    login_password: pass
+    priv: 'wordpress.*:ALL'
+    state: present
+    host: localhost
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Create MySQL database (CentOS)  
+  community.mysql.mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: wordpress
+    state: present
+  when: ansible_os_family == "RedHat"
+    
+- name: Create MySQL user (CentOS)
+  community.mysql.mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: wordpressuser
+    password: pass
+    login_user: root
+    login_password: pass
+    priv: 'wordpress.*:ALL'
+    state: present
+    host: localhost
+  when: ansible_os_family == "RedHat"
+

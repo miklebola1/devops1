@@ -1,0 +1,107 @@
+---
+# tasks file for roles/deploy_content
+
+- name: Ensure content directories exist (Ubuntu)
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  loop:
+    - /var/www/wordpress/images
+    - /var/www/wordpress/pages
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Copy images to content directory (Ubuntu)
+  copy:
+    src: "files/images/"
+    dest: /var/www/wordpress/images/
+    owner: www-data
+    group: www-data
+    mode: '0644'
+    remote_src: no
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Copy HTML pages to content directory (Ubuntu)
+  copy:
+    src: "files/pages/"
+    dest: /var/www/wordpress/pages/
+    owner: www-data
+    group: www-data
+    mode: '0644'
+    remote_src: no
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Ensure correct permissions for directories (Ubuntu)
+  find:
+    paths: /var/www/wordpress
+    recurse: yes
+    file_type: directory
+  register: content_dirs
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Set permissions for directories (Ubuntu)
+  shell: |
+    find /var/www/wordpress -type d -exec chmod 0755 {} +
+    find /var/www/wordpress -type d -exec chown www-data:www-data {} +
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Set permissions for files (Ubuntu)
+  shell: |
+    find /var/www/wordpress -type f -exec chmod 0644 {} +
+    find /var/www/wordpress -type f -exec chown www-data:www-data {} +
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Copy images to content directory (CentOS)
+  copy:
+    src: "files/images/"
+    dest: /usr/share/nginx/html/images/
+    owner: nginx
+    group: nginx
+    mode: '0644'
+    remote_src: no
+  when: ansible_os_family == "RedHat"
+
+- name: Copy HTML pages to content directory (CentOS)
+  copy:
+    src: "files/pages/"
+    dest: /usr/share/nginx/html/pages/
+    owner: nginx
+    group: nginx
+    mode: '0644'
+    remote_src: no
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure content directories exist (CentOS)
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0755'
+  loop:
+    - /usr/share/nginx/html/images
+    - /usr/share/nginx/html/pages
+  when: ansible_os_family == "RedHat"
+
+- name: Set permissions for directories (CentOS)
+  shell: |
+    find /usr/share/nginx/html -type d -exec chmod 0755 {} +
+    find /usr/share/nginx/html -type d -exec chown nginx:nginx {} +
+  when: ansible_os_family == 'RedHat'
+
+- name: Ensure correct permissions for files (CentsOS)
+  find:
+    paths: /usr/share/nginx/html
+    recurse: yes
+    file_type: file
+  register: content_files
+  when: ansible_os_family == "RedHat"
+
+- name: Set permissions for files (CentOS)
+  shell: |
+    find /usr/share/nginx/html -type f -exec chmod 0644 {} +
+    find /usr/share/nginx/html -type f -exec chown nginx:nginx {} +
+  when: ansible_os_family == 'RedHat'
+

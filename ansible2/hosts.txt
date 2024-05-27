@@ -1,0 +1,10 @@
+[ubuntu]
+ubuntu_server ansible_host=13.50.109.231 ansible_user=ubuntu 
+
+[centos]
+redhat_server ansible_host=16.16.169.58 ansible_user=ec2-user
+
+
+[all_servers:children]
+ubuntu
+centos

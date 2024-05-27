@@ -1,0 +1,30 @@
+---
+# tasks file for roles/deploy_uptime_service
+
+- name: Create directory for scripts
+  file:
+    path: /opt/scripts
+    state: directory
+    mode: '0755'
+
+- name: Copy uptime_script.sh to server
+  copy:
+    src: files/uptime_script.sh
+    dest: /opt/scripts/uptime_script.sh
+    mode: 0755
+
+
+- name: Copy uptime.service to server
+  copy:
+    src: files/uptime.service
+    dest: /etc/systemd/system/uptime.service
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Start uptime service
+  systemd:
+    name: uptime
+    state: started
+    enabled: yes

@@ -1,0 +1,5 @@
+---
+# defaults file for configuration_php
+
+php_version: '8.1'
+php_ini_path: "/etc/php/{{ php_version }}/fpm/php.ini"

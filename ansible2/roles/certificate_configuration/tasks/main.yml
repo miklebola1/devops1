@@ -1,0 +1,62 @@
+---
+# tasks file for roles/certificate_configuration
+
+- name: Ensure SSL certificate directory exists
+  file:
+    path: "/etc/ssl/nginx"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Generate self-signed SSL certificate and key
+  command: >
+    openssl req -x509 -nodes -days 365
+    -newkey rsa:2048
+    -keyout "/etc/ssl/nginx/nginx-selfsigned.key"
+    -out "/etc/ssl/nginx/nginx-selfsigned.crt"
+    -subj "/C=US/ST=State/L=City/O=Organization/OU=Department/CN={{ inventory_hostname }}"
+  args:
+    creates: "/etc/ssl/nginx/nginx-selfsigned.crt"
+
+- name: Copy Nginx configuration file with SSL (Ubuntu)
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/sites-available/wordpress
+  notify:
+    - restart nginx
+  when: ansible_distribution == 'Ubuntu'
+  vars:
+    nginx_user: www-data
+    server_ip: 13.50.109.231
+    path: /var/run/php/php8.3-fpm.sock
+    root: /var/www/wordpress
+
+- name: Copy Nginx configuration file (CentOS)
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/conf.d/wordpress.conf
+  notify:
+    - restart nginx
+  when: ansible_os_family == "RedHat"
+  vars:
+    nginx_user: nginx
+    server_ip: 16.16.169.58
+    path: /run/php-fpm/www.sock
+    root: /usr/share/nginx/html
+
+- name: Remove default Nginx configuration link
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Create symbolic link for WordPress Nginx configuration
+  file:
+    src: /etc/nginx/sites-available/wordpress
+    dest: /etc/nginx/sites-enabled/wordpress
+    state: link
+  when: ansible_distribution == 'Ubuntu'
+  notify:
+    - restart nginx
+

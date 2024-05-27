@@ -1,0 +1,104 @@
+---
+# tasks file for deploy_wordpress
+
+- name: Ensure WordPress directory exists (Ubuntu)
+  file:
+    path: /var/www/wordpress
+    state: directory
+    owner: www-data
+    group: www-data
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Download WordPress
+  ansible.builtin.get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /tmp/latest.tar.gz
+    mode: '0644'
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Download WordPress (CentOS)
+  ansible.builtin.get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /usr/share/nginx/html/latest.tar.gz
+    mode: '0644'
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure the WordPress directory exists (CentOS)
+  file:
+    path: /usr/share/nginx/html/wordpress
+    state: directory
+  when: ansible_os_family == "RedHat"
+
+- name: Extract WordPress (Ubuntu)
+  ansible.builtin.unarchive:
+    src: /tmp/latest.tar.gz
+    dest: /tmp
+    remote_src: yes
+    creates: /tmp/wordpress
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Extract WordPress
+  ansible.builtin.command:
+    cmd: tar -xzvf /usr/share/nginx/html/latest.tar.gz -C /usr/share/nginx/html
+  when: ansible_os_family == "RedHat"
+
+- name: Change ownership of WordPress files (CentOS)
+  file:
+    path: /usr/share/nginx/html/wordpress
+    state: directory
+    recurse: yes
+    owner: nginx
+    group: nginx
+  when: ansible_os_family == "RedHat"
+
+- name: Copy  WordPress (Ubuntu)
+  ansible.builtin.copy:
+    src: /tmp/wordpress/
+    dest: /var/www/wordpress/
+    remote_src: yes
+    owner: www-data
+    group: www-data
+    mode: preserve
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Copy WordPress files to root directory
+  shell: |
+    cp -r /usr/share/nginx/html/wordpress/* /usr/share/nginx/html/
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure correct permissions and ownership for WordPress directory
+  shell: |
+    find /usr/share/nginx/html/ -type d -exec chmod 755 {} \;
+    find /usr/share/nginx/html/ -type f -exec chmod 644 {} \;
+    chown -R nginx:nginx /usr/share/nginx/html/
+  when: ansible_os_family == "RedHat"
+
+- name: Remove temporary files and WordPress directory
+  ansible.builtin.shell: |
+    rm -rf /usr/share/nginx/html/wordpress /usr/share/nginx/html/latest.tar.gz
+  when: ansible_os_family == "RedHat"
+
+- name: Create wp-config.php from template
+  template:
+    src: templates/wp-config.php
+    dest: /usr/share/nginx/html/wp-config.php
+  when: ansible_os_family == "RedHat"
+
+- name: Установка прав доступа 755 для всех директорий в WordPress
+  ansible.builtin.command:
+    cmd: find /var/www/wordpress/ -type d -exec chmod 755 {} +
+  register: dirs_permissions
+  failed_when: dirs_permissions.rc != 0 and "No such file or directory" not in dirs_permissions.stderr
+
+- name: Установка прав доступа 644 для всех файлов в WordPress
+  ansible.builtin.command:
+    cmd: find /var/www/wordpress/ -type f -exec chmod 644 {} +
+  register: files_permissions
+  failed_when: files_permissions.rc != 0 and "No such file or directory" not in files_permissions.stderr
+
+
+- name: Restart nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: yes 

@@ -1,0 +1,8 @@
+---
+# defaults file for deploy_wordpress_db
+
+db_name: "wordpress"
+db_user: "wordpress_user_1"
+db_pass: "123321Qq."
+
+mysql_root_password: "123321Qq."
